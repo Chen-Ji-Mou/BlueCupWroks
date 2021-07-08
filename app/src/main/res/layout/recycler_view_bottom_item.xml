@@ -4,16 +4,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-
+    
     <TextView
-        android:id="@+id/tv"
+        android:id="@+id/tv_loading"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:layout_marginTop="2dp"
-        android:background="@color/blue"
+        android:background="@color/colorPrimary"
         android:gravity="center"
-        android:text="加载中，请稍后..."
-        android:textColor="#ffffff"
+        android:text="@string/tv_loading"
+        android:textColor="@color/white"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

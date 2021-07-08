@@ -9,5 +9,6 @@
 
     <string name="menu_home">小象图库</string>
     <string name="menu_gallery">我的收藏</string>
+    <string name="tv_loading">加载中，请稍后...</string>
 
 </resources>

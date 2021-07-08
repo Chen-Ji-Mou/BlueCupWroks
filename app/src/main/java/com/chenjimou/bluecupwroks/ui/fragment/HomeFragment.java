@@ -21,6 +21,7 @@ import com.chenjimou.bluecupwroks.myInterface.Pictures;
 import com.chenjimou.bluecupwroks.ui.adapter.HomeFragmentRecyclerViewAdapter;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.utils.RecyclerViewScrollControlUtil;
+import com.chenjimou.bluecupwroks.widget.MainItemDecoration;
 import com.google.gson.Gson;
 
 import org.litepal.LitePal;
@@ -42,9 +43,10 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class HomeFragment extends Fragment implements RecyclerViewScrollControlUtil.OnRecycleRefreshListener {
-
-    private List<PictureBean> list = new ArrayList<>();
+public class HomeFragment extends Fragment implements
+        RecyclerViewScrollControlUtil.OnRecycleRefreshListener
+{
+    private final List<PictureBean> list = new ArrayList<>();
     private HomeFragmentRecyclerViewAdapter recyclerViewAdapter;
     private MainActivityViewModel model;
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
@@ -71,6 +73,7 @@ public class HomeFragment extends Fragment implements RecyclerViewScrollControlU
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         staggeredGridLayoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);// 防止瀑布流中图片错乱排序
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        recyclerView.addItemDecoration(new MainItemDecoration());
         recyclerViewAdapter = new HomeFragmentRecyclerViewAdapter(getActivity(), list);
         recyclerView.setAdapter(recyclerViewAdapter);
         recyclerView.addOnScrollListener(mController);// 将控制器绑定 RecyclerView

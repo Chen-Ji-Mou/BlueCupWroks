@@ -20,6 +20,7 @@ import com.chenjimou.bluecupwroks.model.PictureBean;
 import com.chenjimou.bluecupwroks.myInterface.Pictures;
 import com.chenjimou.bluecupwroks.ui.adapter.GalleryFragmentRecyclerViewAdapter;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
+import com.chenjimou.bluecupwroks.widget.MainItemDecoration;
 import com.google.gson.Gson;
 
 import org.litepal.LitePal;
@@ -67,6 +68,7 @@ public class GalleryFragment extends Fragment {
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         staggeredGridLayoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);// 防止瀑布流中图片错乱排序
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
+        recyclerView.addItemDecoration(new MainItemDecoration());
         recyclerViewAdapter = new GalleryFragmentRecyclerViewAdapter(getActivity(), list);
         recyclerView.setAdapter(recyclerViewAdapter);
 

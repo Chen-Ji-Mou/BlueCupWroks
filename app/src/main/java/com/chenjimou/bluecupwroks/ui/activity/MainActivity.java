@@ -1,7 +1,10 @@
 package com.chenjimou.bluecupwroks.ui.activity;
 
+import android.app.Activity;
+import android.app.Application;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 
 import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.jetpack.MainActivityViewModel;
@@ -16,20 +19,18 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-public class MainActivity extends AppCompatActivity {
-
-    private AppBarConfiguration mAppBarConfiguration;
-    private MainActivityViewModel model;
+public class MainActivity extends AppCompatActivity
+{
+    AppBarConfiguration mAppBarConfiguration;
+    MainActivityViewModel model;
+    public static Application sApplication;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        View decorView = getWindow().getDecorView();
-        int option = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-        decorView.setSystemUiVisibility(option);
-        getWindow().setStatusBarColor(getColor(R.color.blue));
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         model = new ViewModelProvider(this).get(MainActivityViewModel.class);// 初始化 ViewModel
+
+        sApplication = getApplication();
     }
 
 //    @Override
@@ -57,13 +60,15 @@ public class MainActivity extends AppCompatActivity {
 //    }
 
     @Override
-    public boolean onSupportNavigateUp() {
+    public boolean onSupportNavigateUp()
+    {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
     }
 
-    public MainActivityViewModel getModel() {
+    public MainActivityViewModel getModel()
+    {
         return model;
     }
 }
