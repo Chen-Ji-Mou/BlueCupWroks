@@ -24,6 +24,9 @@ android {
         targetCompatibility = 1.8
     }
 
+    viewBinding{
+        enabled = true
+    }
 }
 
 dependencies {
@@ -48,4 +51,7 @@ dependencies {
     implementation 'org.litepal.android:java:3.0.0'//LitePal
 
     implementation 'com.jakewharton.rxbinding3:rxbinding:3.1.0'
+
+    implementation  'com.scwang.smart:refresh-layout-kernel:2.0.3'      //核心必须依赖
+    implementation  'com.scwang.smart:refresh-header-classics:2.0.3'    //经典刷新头
 }
