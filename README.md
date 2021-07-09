@@ -1,2 +1,2 @@
 # BlueCupWroks
-一个瀑布流显示图片的demo，使用了RecyclerView+StaggeredGridLayoutManager实现了瀑布流显示，使用了Retrofit+RxJava异步网络请求加载图片
+一个图片墙的demo，使用了瀑布流进行实现
