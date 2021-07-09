@@ -123,9 +123,9 @@ public class GalleryFragmentRecyclerViewAdapter extends RecyclerView.Adapter<Rec
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             if (itemViewType == NORMAL_VIEW){
-                imageView = itemView.findViewById(R.id.imageView_HomeFragmentListItem);
-                collectionView = itemView.findViewById(R.id.collectionView_HomeFragmentListItem);
-                CardView cardView = itemView.findViewById(R.id.cardView_HomeFragmentListItem);
+                imageView = itemView.findViewById(R.id.iv_picture);
+                collectionView = itemView.findViewById(R.id.ib_collection);
+                CardView cardView = itemView.findViewById(R.id.cv_item);
 
                 cardView.setOnClickListener(new View.OnClickListener() {
                     @Override

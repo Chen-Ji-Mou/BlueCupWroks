@@ -58,7 +58,7 @@ public class HomeFragment extends Fragment
     Disposable disposable;
     Retrofit retrofit;
 
-    int position = 0;
+    int position = 0; // 当前加载到哪一张图片
     int limit = 10; // 初始请求的图片数量，默认为10
 
     private static final String TAG = "HomeFragment";
@@ -97,7 +97,6 @@ public class HomeFragment extends Fragment
                     public ObservableSource<PictureBean> apply(@NotNull List<PictureBean> pictureBeans) throws Exception
                     {
                         dataOnUI.addAll(pictureBeans);
-                        //                            Log.d(TAG, "6666  fromIterable: "+Thread.currentThread().getId());
                         return Observable.fromIterable(pictureBeans);
                     }
                 })
@@ -106,7 +105,9 @@ public class HomeFragment extends Fragment
                     @Override
                     public PictureBean apply(@NotNull PictureBean pictureBean) throws Exception
                     {
-                        List<PictureBean> pictureBeans = LitePal.where("picture_id = ?", pictureBean.getPicture_id()).find(PictureBean.class);
+                        List<PictureBean> pictureBeans = LitePal
+                                .where("picture_id = ?", pictureBean.getPicture_id())
+                                .find(PictureBean.class);
                         pictureBean.setCollection(pictureBeans.size() > 0);
                         return pictureBean;
                     }
@@ -118,7 +119,6 @@ public class HomeFragment extends Fragment
                     public ObservableSource<ResponseBody> apply(@NotNull PictureBean pictureBean) throws Exception
                     {
                         String[] strings = pictureBean.getDownload_url().split("/id/");
-                        //                            Log.d(TAG, "6666  getPicture: "+Thread.currentThread().getId());
                         return pictures.getPicture(strings[1]);
                     }
                 })
@@ -200,17 +200,17 @@ public class HomeFragment extends Fragment
     void init()
     {
         /* 初始化 RecyclerView */
-        
+
         // 创建 LayoutManager
         mLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
-        // 设置布局间隙策略，防止瀑布流中图片错乱
-        mLayoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+//        // 设置布局间隙策略，防止瀑布流中图片错乱
+//        mLayoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         // 设置 LayoutManager
         mBinding.rvHome.setLayoutManager(mLayoutManager);
         // 设置 ItemDecoration
         mBinding.rvHome.addItemDecoration(new MainItemDecoration());
         // 创建适配器
-        mAdapter = new HomeFragmentRecyclerViewAdapter(getActivity(), dataOnUI, mBinding.rvHome);
+        mAdapter = new HomeFragmentRecyclerViewAdapter(getActivity(), dataOnUI);
         // 设置适配器
         mBinding.rvHome.setAdapter(mAdapter);
 
@@ -262,7 +262,7 @@ public class HomeFragment extends Fragment
     void loadMore()
     {
         /* 每次新获取10张图片 */
-        limit = limit + 10;
+        limit += 10;
         /* 对请求返回的数据使用 RxJava 进行进一步处理 */
         Pictures pictures = retrofit.create(Pictures.class);
         pictures.getPictures(1, limit)
@@ -283,7 +283,9 @@ public class HomeFragment extends Fragment
                     @Override
                     public PictureBean apply(@NotNull PictureBean pictureBean) throws Exception
                     {
-                        List<PictureBean> pictureBeans = LitePal.where("picture_id = ?", pictureBean.getPicture_id()).find(PictureBean.class);
+                        List<PictureBean> pictureBeans = LitePal
+                                .where("picture_id = ?", pictureBean.getPicture_id())
+                                .find(PictureBean.class);
                         pictureBean.setCollection(pictureBeans.size() > 0);
                         return pictureBean;
                     }
@@ -327,12 +329,14 @@ public class HomeFragment extends Fragment
                     @Override
                     public void onError(@NotNull Throwable e)
                     {
+                        mBinding.srlHome.finishLoadMore();
                         Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onComplete()
                     {
+                        mBinding.srlHome.finishLoadMore();
                         if(dataOnUI.size() > 0)
                         {
                             mLayoutManager.setSpanCount(2);

@@ -2,18 +2,18 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cardView_HomeFragmentListItem"
+    android:id="@+id/cv_item"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardCornerRadius="5dp"
-    app:cardElevation="1dp">
+    app:cardElevation="0dp">
     
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         
         <ImageView
-            android:id="@+id/imageView_HomeFragmentListItem"
+            android:id="@+id/iv_picture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/Grey500"
@@ -24,7 +24,7 @@
             app:layout_constraintTop_toTopOf="parent" />
         
         <ImageButton
-            android:id="@+id/collectionView_HomeFragmentListItem"
+            android:id="@+id/ib_collection"
             android:layout_width="25sp"
             android:layout_height="25sp"
             android:layout_marginTop="8dp"
