@@ -1,115 +1,105 @@
 package com.chenjimou.bluecupwroks.ui.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomViewTarget;
+import com.bumptech.glide.request.target.ImageViewTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.chenjimou.bluecupwroks.R;
+import com.chenjimou.bluecupwroks.drawable.LoadingDrawable;
 import com.chenjimou.bluecupwroks.model.PictureBean;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.ui.activity.PictureDetailsActivity;
+import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
 import org.litepal.LitePal;
 
 import java.util.List;
 
-public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-    private Context context;
-    private List<PictureBean> list;
-    private final int
-            NORMAL_VIEW = 1,// 正常布局
-            BOTTOM_VIEW = 2;// 上拉刷新布局
+public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<HomeFragmentRecyclerViewAdapter.NormalViewHolder>
+{
+    final Context context;
+    final List<PictureBean> list;
+    final RecyclerView recyclerView;
 
     private static final String TAG = "HomeFragmentRecyclerVie";
 
-    public HomeFragmentRecyclerViewAdapter(Context context, List<PictureBean> list) {
+    public HomeFragmentRecyclerViewAdapter(Context context, List<PictureBean> list, RecyclerView recyclerView)
+    {
         this.context = context;
         this.list = list;
-    }
-
-    @Override
-    public int getItemViewType(int position){
-//        if (position >= list.size()){
-//            return BOTTOM_VIEW;
-//        }
-        return NORMAL_VIEW;
+        this.recyclerView = recyclerView;
     }
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public NormalViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+    {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-//        if (viewType == NORMAL_VIEW){
-//
-//        } else {
-//            return new BottomViewHolder(layoutInflater.inflate(R.layout.recycler_view_bottom_item, parent,false));
-//        }
         return new NormalViewHolder(layoutInflater.inflate(R.layout.recycler_view_item, parent,false));
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder instanceof NormalViewHolder) {
-            PictureBean pictureBean = list.get(position);
-            NormalViewHolder viewHolder = (NormalViewHolder) holder;
-
-            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            assert windowManager != null;
-            int width = windowManager.getDefaultDisplay().getWidth();
-            int imageWidth = (width - 20)/2;
-
-            Glide.with(context)
-                    .load(pictureBean.getPicture_data())
-                    .override(imageWidth, (imageWidth * pictureBean.getHeight() / pictureBean.getWidth()))
-                    .into(viewHolder.imageView);
-
-            if (pictureBean.isCollection()){
-                viewHolder.collectionView.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-            }else {
-                viewHolder.collectionView.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-            }
+    public void onBindViewHolder(@NonNull NormalViewHolder holder, int position)
+    {
+        // 如果命中 if，说明当前 viewHolder 是空白的
+        if (holder.imageView.getTag(R.id.imageView_HomeFragmentListItem) == null
+                || holder.imageView.getTag(R.id.imageView_HomeFragmentListItem) == (Integer) position)
+        {
+            // 设置 Tag
+            holder.imageView.setTag(R.id.imageView_HomeFragmentListItem, position);
+            // 根据当前 position 绑定视图
+            holder.bindView(position);
+        }
+        else // 如果命中 else，说明当前 viewHolder 是复用的
+        {
+            // 清除当前存在的视图状态
+            holder.clearView();
+            // 根据当前 position 重新绑定视图
+            holder.bindView(position);
+            // 重新设置 Tag
+            holder.imageView.setTag(R.id.imageView_HomeFragmentListItem, position);
         }
     }
 
     @Override
-    public int getItemCount() {
-//        if (list.size() > 0){
-//            return list.size() + 1;
-//        }
-//        return 0;
+    public int getItemCount()
+    {
         return list.size();
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
+    public class NormalViewHolder extends RecyclerView.ViewHolder
+    {
+        ImageView imageView;
+        ImageButton collectionView;
 
-    public class NormalViewHolder extends RecyclerView.ViewHolder {
-
-        private ImageView imageView;
-        private ImageButton collectionView;
-
-        NormalViewHolder(@NonNull View itemView) {
+        NormalViewHolder(@NonNull View itemView)
+        {
             super(itemView);
 
             imageView = itemView.findViewById(R.id.imageView_HomeFragmentListItem);
             collectionView = itemView.findViewById(R.id.collectionView_HomeFragmentListItem);
             CardView cardView = itemView.findViewById(R.id.cardView_HomeFragmentListItem);
 
-            cardView.setOnClickListener(new View.OnClickListener() {
+            cardView.setOnClickListener(new View.OnClickListener()
+            {
                 @Override
                 public void onClick(View view) {
                     int position = getAdapterPosition();
@@ -126,7 +116,8 @@ public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<Recycl
                 }
             });
 
-            collectionView.setOnClickListener(new View.OnClickListener() {
+            collectionView.setOnClickListener(new View.OnClickListener()
+            {
                 @Override
                 public void onClick(View view) {
                     int position = getAdapterPosition();
@@ -160,6 +151,39 @@ public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<Recycl
                     ((MainActivity)context).getModel().setGalleryList(database_data);
                 }
             });
+        }
+
+        public void bindView(int position)
+        {
+            int screenWidth = DisplayUtils.getScreenWidth((Activity)context);
+            int imageWidth = (screenWidth - DisplayUtils.dip2px(context, 24)) / 2;
+            int imageHeight = (int) (imageWidth * (1.0f * list.get(position).getHeight() / list.get(position).getWidth()));
+
+            StaggeredGridLayoutManager.LayoutParams layoutParams =
+                    (StaggeredGridLayoutManager.LayoutParams) itemView.getLayoutParams();
+            layoutParams.height = imageHeight;
+            itemView.setLayoutParams(layoutParams);
+
+            Glide.with(context)
+                    .load(list.get(position).getPicture_data())
+                    .override(imageWidth, imageHeight)
+                    .placeholder(R.drawable.ic_loading)
+                    .into(imageView);
+
+            if (list.get(position).isCollection())
+            {
+                collectionView.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
+            }
+            else
+            {
+                collectionView.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
+            }
+        }
+
+        public void clearView()
+        {
+            imageView.setImageDrawable(null);
+            collectionView.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
         }
     }
 }

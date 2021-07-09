@@ -8,6 +8,7 @@ import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 public class MainItemDecoration extends RecyclerView.ItemDecoration
 {
@@ -16,44 +17,32 @@ public class MainItemDecoration extends RecyclerView.ItemDecoration
             @NonNull RecyclerView parent, @NonNull RecyclerView.State state)
     {
         super.getItemOffsets(outRect, view, parent, state);
+
+        StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
+        int spanIndex = layoutParams.getSpanIndex();
         int position = parent.getChildAdapterPosition(view);
-        if (position % 2 == 0)
+        int divider = DisplayUtils.dip2px(MainActivity.sApplication,8);
+
+        outRect.bottom = divider;
+        if (position == 0 || position == 1)
         {
-            if (position != parent.getAdapter().getItemCount() - 2)
-            {
-                outRect.set(
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        0);
-            }
-            else
-            {
-                outRect.set(
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8));
-            }
+            outRect.top = divider;
         }
         else
         {
-            if (position != parent.getAdapter().getItemCount() - 1)
-            {
-                outRect.set(
-                        0,
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        0);
-            }
-            else
-            {
-                outRect.set(
-                        0,
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8),
-                        DisplayUtils.dip2px(MainActivity.sApplication,8));
-            }
+            outRect.top = 0;
+        }
+
+        // 偶数项
+        if (spanIndex % 2 == 0)
+        {
+            outRect.left = divider;
+            outRect.right = divider / 2;
+        }
+        else
+        {
+            outRect.left = divider / 2;
+            outRect.right = divider;
         }
     }
 }
