@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,21 +30,18 @@ import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
 import org.litepal.LitePal;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<HomeFragmentRecyclerViewAdapter.ViewHolder>
+public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
 {
     RecyclerViewItemBinding mBinding;
 
     final Context context;
     final List<PictureBean> data;
-    final LruCache<Integer, Drawable> dataCache = new LruCache<>(5);
 
-    private static final String TAG = "HomeFragmentRecyclerVie";
+    private static final String TAG = "HomeAdapter";
 
-    public HomeFragmentRecyclerViewAdapter(Context context, List<PictureBean> data)
+    public HomeAdapter(Context context, List<PictureBean> data)
     {
         this.context = context;
         this.data = data;
@@ -60,6 +58,15 @@ public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<HomeFr
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
+        if (data.get(position).isCollection())
+        {
+            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
+        }
+        else
+        {
+            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
+        }
+
         int screenWidth = DisplayUtils.getScreenWidth((Activity)context);
         int imageWidth = (screenWidth - DisplayUtils.dip2px(context, 24)) / 2;
         int imageHeight = (int) (imageWidth * (1.0f * data.get(position).getHeight() / data.get(position).getWidth()));
@@ -69,76 +76,11 @@ public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<HomeFr
         layoutParams.height = imageHeight;
         holder.itemView.setLayoutParams(layoutParams);
 
-        /* ----------------------- 此时 Tag 为空，说明当前 viewHolder 没有绑定过 ----------------------- */
-
-        if (holder.itemView.getTag() == null)
-        {
-            Glide.with(context)
-                    .load(data.get(position).getPicture_data())
-                    .override(imageWidth, imageHeight)
-                    .placeholder(R.drawable.ic_loading)
-                    .into(holder.ivPicture);
-            return;
-        }
-
-        /* ---------------------- 此时 Tag 不为空，说明当前 viewHolder 绑定过至少一次 -------------------- */
-
-        int lastPosition = (Integer) holder.itemView.getTag();
-
-        // 如果 lastPosition < position，说明图片墙向下滚动，加载新的图片
-        if (lastPosition < position)
-        {
-            Glide.with(context)
-                    .load(data.get(position).getPicture_data())
-                    .override(imageWidth, imageHeight)
-                    .placeholder(R.drawable.ic_loading)
-                    .into(new CustomViewTarget<ImageView, Drawable>(holder.ivPicture)
-                    {
-                        @Override
-                        public void onLoadFailed(@Nullable Drawable errorDrawable)
-                        {
-
-                        }
-
-                        @Override
-                        public void onResourceReady(@NonNull Drawable resource,
-                                @Nullable Transition<? super Drawable> transition)
-                        {
-                            int lastPosition = (Integer) holder.itemView.getTag();
-                            // 因为 Glide 是异步加载，此时的 lastPosition 就是先前发起请求的 position
-                            dataCache.put(lastPosition, resource);
-                            // 如果此时 position != lastPosition 说明在 Glide 异步返回的时候 viewHolder 已经移出了屏幕外
-                            if (position != lastPosition)
-                                return;
-                            holder.ivPicture.setImageDrawable(resource);
-                        }
-
-                        @Override
-                        protected void onResourceCleared(@Nullable Drawable placeholder)
-                        {
-
-                        }
-                    });
-
-        }
-
-        // 如果 lastPosition > position，说明图片墙向上滚动，加载之前的图片
-        if (lastPosition > position)
-        {
-            holder.ivPicture.setImageDrawable(dataCache.get(lastPosition));
-        }
-
-        // 设置 Tag，记录 position
-        holder.itemView.setTag(position);
-
-        if (data.get(position).isCollection())
-        {
-            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-        }
-        else
-        {
-            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-        }
+        Glide.with(context)
+                .load(data.get(position).getPicture_data())
+                .placeholder(R.drawable.ic_loading)
+                .override(imageWidth, imageHeight)
+                .into(holder.ivPicture);
     }
 
     @Override
@@ -155,7 +97,9 @@ public class HomeFragmentRecyclerViewAdapter extends RecyclerView.Adapter<HomeFr
     {
         super.onViewRecycled(holder);
         // 清空当前显示图片
-        holder.ivPicture.setImageDrawable(null);
+        holder.ivPicture.setImageResource(R.drawable.ic_loading);
+        // 取消加载请求
+        Glide.with(context).clear(holder.ivPicture);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder

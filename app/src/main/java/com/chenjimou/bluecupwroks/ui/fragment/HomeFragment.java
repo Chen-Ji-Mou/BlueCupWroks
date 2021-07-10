@@ -16,7 +16,7 @@ import com.chenjimou.bluecupwroks.databinding.FragmentHomeBinding;
 import com.chenjimou.bluecupwroks.jetpack.MainActivityViewModel;
 import com.chenjimou.bluecupwroks.model.PictureBean;
 import com.chenjimou.bluecupwroks.myInterface.Pictures;
-import com.chenjimou.bluecupwroks.ui.adapter.HomeFragmentRecyclerViewAdapter;
+import com.chenjimou.bluecupwroks.ui.adapter.HomeAdapter;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.widget.MainItemDecoration;
 import com.google.gson.Gson;
@@ -50,7 +50,7 @@ public class HomeFragment extends Fragment
 
     final List<PictureBean> dataOnUI = new ArrayList<>();
 
-    HomeFragmentRecyclerViewAdapter mAdapter;
+    HomeAdapter mAdapter;
     MainActivityViewModel mViewModel;
     StaggeredGridLayoutManager mLayoutManager;
     ProgressDialog mDialog;
@@ -73,12 +73,6 @@ public class HomeFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
     {
         init();
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
         if (!loadFromModel())
         {
             loadFromInternet();
@@ -210,7 +204,7 @@ public class HomeFragment extends Fragment
         // 设置 ItemDecoration
         mBinding.rvHome.addItemDecoration(new MainItemDecoration());
         // 创建适配器
-        mAdapter = new HomeFragmentRecyclerViewAdapter(getActivity(), dataOnUI);
+        mAdapter = new HomeAdapter(getActivity(), dataOnUI);
         // 设置适配器
         mBinding.rvHome.setAdapter(mAdapter);
 
