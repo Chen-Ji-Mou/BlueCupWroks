@@ -34,9 +34,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
     final Context context;
     final List<PictureBean> data;
-    int itemViewType;
-    final int NO_DATA = 0, //无数据
-            NORMAL_VIEW = 1; //正常布局
 
     public GalleryAdapter(Context context, List<PictureBean> data)
     {
@@ -84,6 +81,19 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
     public int getItemCount()
     {
         return data.size();
+    }
+
+    /**
+     * ViewHolder 移出界面时的回调
+     */
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder)
+    {
+        super.onViewRecycled(holder);
+        // 清空当前显示图片
+        holder.ivPicture.setImageResource(R.drawable.ic_loading);
+        // 取消加载请求
+        Glide.with(context).clear(holder.ivPicture);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder

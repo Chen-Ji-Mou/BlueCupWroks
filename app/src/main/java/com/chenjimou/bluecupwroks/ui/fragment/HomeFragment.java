@@ -58,7 +58,7 @@ public class HomeFragment extends Fragment
     Disposable disposable;
     Retrofit retrofit;
 
-    int position = 0; // 当前加载到哪一张图片
+    volatile int position = 0; // 当前加载到哪一张图片
     int limit = 10; // 初始请求的图片数量，默认为10
 
     private static final String TAG = "HomeFragment";
@@ -159,7 +159,7 @@ public class HomeFragment extends Fragment
                         {
                             mLayoutManager.setSpanCount(2);
                         }
-                        mAdapter.notifyItemRangeChanged(0,10);
+                        mAdapter.notifyDataSetChanged();
                         /* 保存数据到 ViewModel */
                         mViewModel.setHomeList(dataOnUI);
                     }
@@ -197,8 +197,6 @@ public class HomeFragment extends Fragment
 
         // 创建 LayoutManager
         mLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
-//        // 设置布局间隙策略，防止瀑布流中图片错乱
-//        mLayoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
         // 设置 LayoutManager
         mBinding.rvHome.setLayoutManager(mLayoutManager);
         // 设置 ItemDecoration
@@ -335,7 +333,7 @@ public class HomeFragment extends Fragment
                         {
                             mLayoutManager.setSpanCount(2);
                         }
-                        mAdapter.notifyItemRangeChanged(position - 10,10);
+                        mAdapter.notifyItemInserted(position - 10);
                         /* 保存数据到 ViewModel */
                         mViewModel.setHomeList(dataOnUI);
                     }
