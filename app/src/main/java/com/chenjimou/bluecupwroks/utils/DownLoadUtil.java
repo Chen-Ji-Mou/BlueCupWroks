@@ -11,7 +11,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.chenjimou.bluecupwroks.myInterface.Pictures;
+import com.chenjimou.bluecupwroks.inter.RetrofitRequest;
 import com.google.gson.Gson;
 
 import java.io.OutputStream;
@@ -46,8 +46,8 @@ public class DownLoadUtil {
 
         String[] strings = download_url.split("/id/");
 
-        Pictures pictures = retrofit.create(Pictures.class);
-        pictures.getPicture(strings[1])
+        RetrofitRequest retrofitRequest = retrofit.create(RetrofitRequest.class);
+        retrofitRequest.loadPicture(strings[1])
                 .subscribeOn(Schedulers.io())// 事件产生的线程，IO异步
                 .observeOn(Schedulers.io())// 事件消费的线程，IO异步
                 .map(new Function<ResponseBody, Bitmap>() {

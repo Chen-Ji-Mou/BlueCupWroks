@@ -15,20 +15,21 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
+import androidx.constraintlayout.widget.Constraints;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomViewTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.chenjimou.bluecupwroks.Constants;
 import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.RecyclerViewItemBinding;
+import com.chenjimou.bluecupwroks.jetpack.room.PictureDatabase;
 import com.chenjimou.bluecupwroks.model.PictureBean;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.ui.activity.PictureDetailsActivity;
 import com.chenjimou.bluecupwroks.utils.DisplayUtils;
-
-import org.litepal.LitePal;
 
 import java.util.List;
 
@@ -77,7 +78,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
         holder.itemView.setLayoutParams(layoutParams);
 
         Glide.with(context)
-                .load(data.get(position).getPicture_data())
+                .load(data.get(position).getDownload_url())
                 .placeholder(R.drawable.ic_loading)
                 .override(imageWidth, imageHeight)
                 .into(holder.ivPicture);
@@ -117,17 +118,11 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
             mBinding.cvItem.setOnClickListener(new View.OnClickListener()
             {
                 @Override
-                public void onClick(View view) {
-                    int position = getAdapterPosition();
-                    PictureBean pictureBean = data.get(position);
+                public void onClick(View view)
+                {
+                    PictureBean pictureBean = data.get(getAdapterPosition());
                     Intent intent = new Intent(context, PictureDetailsActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("picture_id", pictureBean.getPicture_id());
-                    bundle.putString("author", pictureBean.getAuthor());
-                    bundle.putInt("width", pictureBean.getWidth());
-                    bundle.putInt("height", pictureBean.getHeight());
-                    bundle.putString("download_url", pictureBean.getDownload_url());
-                    intent.putExtras(bundle);
+                    intent.putExtra(Constants.PICTURE_BEAN, pictureBean);
                     context.startActivity(intent);
                 }
             });
@@ -135,36 +130,33 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
             ibCollection.setOnClickListener(new View.OnClickListener()
             {
                 @Override
-                public void onClick(View view) {
-                    int position = getAdapterPosition();
-                    PictureBean pictureBean = data.get(position);
-                    if (pictureBean.isCollection()){
+                public void onClick(View view)
+                {
+                    PictureBean pictureBean = data.get(getAdapterPosition());
+
+                    boolean isCollection = pictureBean.isCollection();
+
+                    pictureBean.setCollection(!isCollection);
+
+                    if (isCollection)
+                    {
                         ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-                        LitePal.deleteAll(PictureBean.class,"picture_id = ?", pictureBean.getPicture_id());
-                        pictureBean.setCollection(false);
-                    }else{
+                        PictureDatabase.getInstance().getPictureDao().delete(pictureBean);
+                    }
+                    else
+                    {
                         ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-                        PictureBean pictureBean1 = new PictureBean();
-                        pictureBean1.setPicture_id(data.get(position).getPicture_id());
-                        pictureBean1.setAuthor(data.get(position).getAuthor());
-                        pictureBean1.setWidth(data.get(position).getWidth());
-                        pictureBean1.setHeight(data.get(position).getHeight());
-                        pictureBean1.setUrl(data.get(position).getUrl());
-                        pictureBean1.setDownload_url(data.get(position).getDownload_url());
-                        pictureBean1.save();
-                        pictureBean.setCollection(true);
+                        PictureDatabase.getInstance().getPictureDao().insert(pictureBean);
                     }
+
+                    // 更新 viewModel 中的数据
                     ((MainActivity)context).getModel().setHomeList(data);
-                    List<PictureBean> database_data = LitePal.findAll(PictureBean.class);
-                    for (PictureBean p1:database_data) {
-                        for (PictureBean p2: data) {
-                            if (p2.getPicture_id().equals(p1.getPicture_id())){
-                                p1.setPicture_data(p2.getPicture_data());
-                                p1.setCollection(p2.isCollection());
-                            }
-                        }
-                    }
-                    ((MainActivity)context).getModel().setGalleryList(database_data);
+
+                    List<PictureBean> dataFromDatabase = PictureDatabase.getInstance().getPictureDao().findAll();
+
+                    ((MainActivity)context).getModel().setGalleryList(dataFromDatabase);
+
+                    notifyItemChanged(getAdapterPosition());
                 }
             });
         }

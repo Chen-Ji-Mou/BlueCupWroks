@@ -12,10 +12,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.FragmentHomeBinding;
-import com.chenjimou.bluecupwroks.jetpack.MainActivityViewModel;
+import com.chenjimou.bluecupwroks.jetpack.viewmodel.MainActivityViewModel;
 import com.chenjimou.bluecupwroks.model.PictureBean;
-import com.chenjimou.bluecupwroks.myInterface.Pictures;
+import com.chenjimou.bluecupwroks.inter.RetrofitRequest;
 import com.chenjimou.bluecupwroks.ui.adapter.HomeAdapter;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.widget.MainItemDecoration;
@@ -25,21 +26,17 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 
 import org.jetbrains.annotations.NotNull;
-import org.litepal.LitePal;
+
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -52,14 +49,14 @@ public class HomeFragment extends Fragment
 
     HomeAdapter mAdapter;
     MainActivityViewModel mViewModel;
-    StaggeredGridLayoutManager mLayoutManager;
     ProgressDialog mDialog;
 
     Disposable disposable;
     Retrofit retrofit;
 
-    volatile int position = 0; // 当前加载到哪一张图片
-    int limit = 10; // 初始请求的图片数量，默认为10
+    int currentPage = 1;
+
+    int lastLoadPosition = 0;
 
     private static final String TAG = "HomeFragment";
 
@@ -79,126 +76,12 @@ public class HomeFragment extends Fragment
         }
     }
 
-    private void loadFromInternet()
-    {
-        /* 对请求返回的数据使用 RxJava 进行进一步处理 */
-        Pictures pictures = retrofit.create(Pictures.class);
-        pictures.getPictures(1, limit)
-                .subscribeOn(Schedulers.io())
-                .flatMap(new Function<List<PictureBean>, ObservableSource<PictureBean>>()
-                {
-                    @Override
-                    public ObservableSource<PictureBean> apply(@NotNull List<PictureBean> pictureBeans) throws Exception
-                    {
-                        dataOnUI.addAll(pictureBeans);
-                        return Observable.fromIterable(pictureBeans);
-                    }
-                })
-                .map(new Function<PictureBean, PictureBean>()
-                {
-                    @Override
-                    public PictureBean apply(@NotNull PictureBean pictureBean) throws Exception
-                    {
-                        List<PictureBean> pictureBeans = LitePal
-                                .where("picture_id = ?", pictureBean.getPicture_id())
-                                .find(PictureBean.class);
-                        pictureBean.setCollection(pictureBeans.size() > 0);
-                        return pictureBean;
-                    }
-                })
-                .observeOn(Schedulers.newThread())
-                .flatMap(new Function<PictureBean, ObservableSource<ResponseBody>>()
-                {
-                    @Override
-                    public ObservableSource<ResponseBody> apply(@NotNull PictureBean pictureBean) throws Exception
-                    {
-                        String[] strings = pictureBean.getDownload_url().split("/id/");
-                        return pictures.getPicture(strings[1]);
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .map(new Function<ResponseBody, byte[]>()
-                {
-                    @Override
-                    public byte[] apply(@NotNull ResponseBody responseBody) throws Exception
-                    {
-                        return responseBody.bytes();
-                    }
-                })
-                .subscribe(new Observer<byte[]>()
-                {
-                    @Override
-                    public void onSubscribe(@NotNull Disposable d)
-                    {
-                        mDialog.show();
-                        disposable = d;
-                    }
-
-                    @Override
-                    public void onNext(@NotNull byte[] bytes)
-                    {
-                        if (bytes != null)
-                        {
-                            dataOnUI.get(position).setPicture_data(bytes);
-                            position++;
-                        }
-                    }
-
-                    @Override
-                    public void onError(@NotNull Throwable e)
-                    {
-                        mDialog.dismiss();
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onComplete()
-                    {
-                        mDialog.dismiss();
-                        if(dataOnUI.size() > 0)
-                        {
-                            mLayoutManager.setSpanCount(2);
-                        }
-                        mAdapter.notifyDataSetChanged();
-                        /* 保存数据到 ViewModel */
-                        mViewModel.setHomeList(dataOnUI);
-                    }
-                });
-    }
-
-    /**
-     * 从 ViewModel 中读取数据
-     */
-    boolean loadFromModel()
-    {
-        boolean result;
-        List<PictureBean> dataFromModel = mViewModel.getHomeList().getValue();
-        if (dataFromModel != null && dataFromModel.size() > 0)
-        {
-            dataOnUI.addAll(dataFromModel);
-            if(dataOnUI.size() > 0)
-            {
-                mLayoutManager.setSpanCount(2);
-            }
-            position = dataOnUI.size();
-            mAdapter.notifyDataSetChanged();
-            result = true;
-        }
-        else
-        {
-            result = false;
-        }
-        return result;
-    }
-
     void init()
     {
         /* 初始化 RecyclerView */
 
-        // 创建 LayoutManager
-        mLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         // 设置 LayoutManager
-        mBinding.rvHome.setLayoutManager(mLayoutManager);
+        mBinding.rvHome.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         // 设置 ItemDecoration
         mBinding.rvHome.addItemDecoration(new MainItemDecoration());
         // 创建适配器
@@ -207,7 +90,7 @@ public class HomeFragment extends Fragment
         mBinding.rvHome.setAdapter(mAdapter);
 
         /* 初始化 Retrofit */
-        
+
         retrofit = new Retrofit.Builder()
                 .baseUrl("https://picsum.photos/")
                 .client(new OkHttpClient.Builder()
@@ -242,6 +125,95 @@ public class HomeFragment extends Fragment
         mDialog.setCanceledOnTouchOutside(false);
     }
 
+    /**
+     * 从 ViewModel 中读取数据
+     */
+    boolean loadFromModel()
+    {
+        boolean result;
+        List<PictureBean> dataFromModel = mViewModel.getHomeList().getValue();
+        if (dataFromModel != null && dataFromModel.size() > 0)
+        {
+            dataOnUI.addAll(dataFromModel);
+
+            if(dataOnUI.size() > 0)
+            {
+                mBinding.rvHome.setVisibility(View.VISIBLE);
+                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
+            }
+            else
+            {
+                mBinding.rvHome.setVisibility(View.GONE);
+                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
+            }
+
+            lastLoadPosition = dataOnUI.size();
+
+            mAdapter.notifyDataSetChanged();
+
+            result = true;
+        }
+        else
+        {
+            result = false;
+        }
+        return result;
+    }
+
+    void loadFromInternet()
+    {
+        /* 对请求返回的数据使用 RxJava 进行进一步处理 */
+        RetrofitRequest retrofitRequest = retrofit.create(RetrofitRequest.class);
+        retrofitRequest.loadPictures(currentPage)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<PictureBean>>()
+                {
+                    @Override
+                    public void onSubscribe(@NotNull Disposable d)
+                    {
+                        mDialog.show();
+                        disposable = d;
+                    }
+
+                    @Override
+                    public void onNext(@NotNull List<PictureBean> dataFromInternet)
+                    {
+                        dataOnUI.addAll(dataFromInternet);
+                    }
+
+                    @Override
+                    public void onError(@NotNull Throwable e)
+                    {
+                        mDialog.dismiss();
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onComplete()
+                    {
+                        mDialog.dismiss();
+
+                        if(dataOnUI.size() > 0)
+                        {
+                            mBinding.rvHome.setVisibility(View.VISIBLE);
+                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
+                        }
+                        else
+                        {
+                            mBinding.rvHome.setVisibility(View.GONE);
+                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
+                        }
+
+                        mAdapter.notifyDataSetChanged();
+
+                        lastLoadPosition = dataOnUI.size();
+
+                        mViewModel.setHomeList(dataOnUI);
+                    }
+                });
+    }
+
     @Override
     public void onDestroy()
     {
@@ -253,54 +225,12 @@ public class HomeFragment extends Fragment
 
     void loadMore()
     {
-        /* 每次新获取10张图片 */
-        limit += 10;
         /* 对请求返回的数据使用 RxJava 进行进一步处理 */
-        Pictures pictures = retrofit.create(Pictures.class);
-        pictures.getPictures(1, limit)
-                .subscribeOn(Schedulers.io())// 事件产生的线程，IO异步
-                .observeOn(Schedulers.io())// 事件消费的线程，IO异步
-                .flatMap(new Function<List<PictureBean>, ObservableSource<PictureBean>>()
-                {
-                    @Override
-                    public ObservableSource<PictureBean> apply(@NotNull List<PictureBean> pictureBeans) throws Exception
-                    {
-                        List<PictureBean> list1 = pictureBeans.subList(position,position + 10);
-                        dataOnUI.addAll(list1);
-                        return Observable.fromIterable(list1);
-                    }
-                })
-                .map(new Function<PictureBean, PictureBean>()
-                {
-                    @Override
-                    public PictureBean apply(@NotNull PictureBean pictureBean) throws Exception
-                    {
-                        List<PictureBean> pictureBeans = LitePal
-                                .where("picture_id = ?", pictureBean.getPicture_id())
-                                .find(PictureBean.class);
-                        pictureBean.setCollection(pictureBeans.size() > 0);
-                        return pictureBean;
-                    }
-                })
-                .flatMap(new Function<PictureBean, ObservableSource<ResponseBody>>()
-                {
-                    @Override
-                    public ObservableSource<ResponseBody> apply(@NotNull PictureBean pictureBean) throws Exception
-                    {
-                        String[] strings = pictureBean.getDownload_url().split("/id/");
-                        return pictures.getPicture(strings[1]);
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread()) // 事件消费的线程，切换主线程
-                .map(new Function<ResponseBody, byte[]>()
-                {
-                    @Override
-                    public byte[] apply(@NotNull ResponseBody responseBody) throws Exception
-                    {
-                        return responseBody.bytes();
-                    }
-                })
-                .subscribe(new Observer<byte[]>()
+        RetrofitRequest retrofitRequest = retrofit.create(RetrofitRequest.class);
+        retrofitRequest.loadPictures(++currentPage)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<PictureBean>>()
                 {
                     @Override
                     public void onSubscribe(@NotNull Disposable d)
@@ -309,32 +239,40 @@ public class HomeFragment extends Fragment
                     }
 
                     @Override
-                    public void onNext(@NotNull byte[] bytes)
+                    public void onNext(@NotNull List<PictureBean> dataFromInternet)
                     {
-                        if (bytes != null)
-                        {
-                            dataOnUI.get(position).setPicture_data(bytes);
-                            position++;
-                        }
+                        dataOnUI.addAll(dataFromInternet);
                     }
 
                     @Override
                     public void onError(@NotNull Throwable e)
                     {
-                        mBinding.srlHome.finishLoadMore();
+                        if (mBinding.srlHome.isLoading())
+                            mBinding.srlHome.finishLoadMore();
                         Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onComplete()
                     {
-                        mBinding.srlHome.finishLoadMore();
+                        if (mBinding.srlHome.isLoading())
+                            mBinding.srlHome.finishLoadMore();
+
                         if(dataOnUI.size() > 0)
                         {
-                            mLayoutManager.setSpanCount(2);
+                            mBinding.rvHome.setVisibility(View.VISIBLE);
+                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
                         }
-                        mAdapter.notifyItemInserted(position - 10);
-                        /* 保存数据到 ViewModel */
+                        else
+                        {
+                            mBinding.rvHome.setVisibility(View.GONE);
+                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
+                        }
+
+                        mAdapter.notifyItemInserted(lastLoadPosition);
+
+                        lastLoadPosition = dataOnUI.size();
+
                         mViewModel.setHomeList(dataOnUI);
                     }
                 });

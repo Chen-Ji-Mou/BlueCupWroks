@@ -1,13 +1,10 @@
 package com.chenjimou.bluecupwroks.ui.activity;
 
-import android.app.Activity;
-import android.app.Application;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
 
 import com.chenjimou.bluecupwroks.R;
-import com.chenjimou.bluecupwroks.jetpack.MainActivityViewModel;
+import com.chenjimou.bluecupwroks.jetpack.viewmodel.MainActivityViewModel;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.lifecycle.ViewModelProvider;
@@ -23,7 +20,6 @@ public class MainActivity extends AppCompatActivity
 {
     AppBarConfiguration mAppBarConfiguration;
     MainActivityViewModel model;
-    public static Application sApplication;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,16 +44,7 @@ public class MainActivity extends AppCompatActivity
         NavigationUI.setupWithNavController(navigationView, navController);
 
         model = new ViewModelProvider(this).get(MainActivityViewModel.class);// 初始化 ViewModel
-
-        sApplication = getApplication();
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
 
     @Override
     public boolean onSupportNavigateUp()

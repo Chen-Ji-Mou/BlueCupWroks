@@ -1,4 +1,4 @@
-package com.chenjimou.bluecupwroks.jetpack;
+package com.chenjimou.bluecupwroks.jetpack.viewmodel;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -10,8 +10,8 @@ import java.util.List;
 
 public class MainActivityViewModel extends ViewModel {
 
-    private MediatorLiveData<List<PictureBean>> homeList;
-    private MediatorLiveData<List<PictureBean>> galleryList;
+    MediatorLiveData<List<PictureBean>> homeList;
+    MediatorLiveData<List<PictureBean>> galleryList;
 
     public MainActivityViewModel() {
         homeList = new MediatorLiveData<>();

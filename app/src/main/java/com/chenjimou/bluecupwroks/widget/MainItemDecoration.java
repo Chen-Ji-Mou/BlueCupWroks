@@ -3,6 +3,7 @@ package com.chenjimou.bluecupwroks.widget;
 import android.graphics.Rect;
 import android.view.View;
 
+import com.chenjimou.bluecupwroks.base.BaseApplication;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
@@ -21,7 +22,7 @@ public class MainItemDecoration extends RecyclerView.ItemDecoration
         StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
         int spanIndex = layoutParams.getSpanIndex();
         int position = parent.getChildAdapterPosition(view);
-        int divider = DisplayUtils.dip2px(MainActivity.sApplication,8);
+        int divider = DisplayUtils.dip2px(BaseApplication.sApplication,8);
 
         outRect.bottom = divider;
         if (position == 0 || position == 1)

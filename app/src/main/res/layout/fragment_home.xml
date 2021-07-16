@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.scwang.smart.refresh.layout.SmartRefreshLayout
-    android:id="@+id/srl_home"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/srl_home"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
     
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_home"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:overScrollMode="never" />
+        android:layout_height="match_parent">
+    
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_home"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:overScrollMode="never" />
+        
+        <include layout="@layout/layout_no_data" />
+        
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.scwang.smart.refresh.layout.SmartRefreshLayout>

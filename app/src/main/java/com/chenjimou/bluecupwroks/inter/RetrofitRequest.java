@@ -1,4 +1,4 @@
-package com.chenjimou.bluecupwroks.myInterface;
+package com.chenjimou.bluecupwroks.inter;
 
 import com.chenjimou.bluecupwroks.model.PictureBean;
 
@@ -10,10 +10,11 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface Pictures {
+public interface RetrofitRequest
+{
     @GET("v2/list")
-    Observable<List<PictureBean>> getPictures(@Query("page") int page, @Query("limit") int limit);
+    Observable<List<PictureBean>> loadPictures(@Query("page") int page);
 
     @GET("id/{path}")
-    Observable<ResponseBody> getPicture(@Path("path") String path);
+    Observable<ResponseBody> loadPicture(@Path("path") String path);
 }

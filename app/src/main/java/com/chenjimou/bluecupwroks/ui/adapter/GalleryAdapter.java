@@ -17,14 +17,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bumptech.glide.Glide;
+import com.chenjimou.bluecupwroks.Constants;
 import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.RecyclerViewItemBinding;
+import com.chenjimou.bluecupwroks.jetpack.room.PictureDatabase;
 import com.chenjimou.bluecupwroks.model.PictureBean;
 import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.ui.activity.PictureDetailsActivity;
 import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
-import org.litepal.LitePal;
 
 import java.util.List;
 
@@ -71,7 +72,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
         holder.itemView.setLayoutParams(layoutParams);
 
         Glide.with(context)
-                .load(data.get(position).getPicture_data())
+                .load(data.get(position).getDownload_url())
                 .placeholder(R.drawable.ic_loading)
                 .override(imageWidth, imageHeight)
                 .into(holder.ivPicture);
@@ -113,16 +114,9 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
                 @Override
                 public void onClick(View view)
                 {
-                    int position = getAdapterPosition();
-                    PictureBean pictureBean = data.get(position);
+                    PictureBean pictureBean = data.get(getAdapterPosition());
                     Intent intent = new Intent(context, PictureDetailsActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("picture_id", pictureBean.getPicture_id());
-                    bundle.putString("author", pictureBean.getAuthor());
-                    bundle.putInt("width", pictureBean.getWidth());
-                    bundle.putInt("height", pictureBean.getHeight());
-                    bundle.putString("download_url", pictureBean.getDownload_url());
-                    intent.putExtras(bundle);
+                    intent.putExtra(Constants.PICTURE_BEAN, pictureBean);
                     context.startActivity(intent);
                 }
             });
@@ -132,42 +126,44 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
                 @Override
                 public void onClick(View view)
                 {
-                    int position = getAdapterPosition();
-                    PictureBean pictureBean = data.get(position);
-                    if (pictureBean.isCollection())
+                    PictureBean pictureBean = data.get(getAdapterPosition());
+
+                    boolean isCollection = pictureBean.isCollection();
+
+                    pictureBean.setCollection(!isCollection);
+
+                    if (isCollection)
                     {
                         ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-                        LitePal.deleteAll(PictureBean.class,"picture_id = ?", pictureBean.getPicture_id());
-                        pictureBean.setCollection(false);
+                        PictureDatabase.getInstance().getPictureDao().delete(pictureBean);
                     }
                     else
                     {
                         ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-                        PictureBean pictureBean1 = new PictureBean();
-                        pictureBean1.setPicture_id(data.get(position).getPicture_id());
-                        pictureBean1.setAuthor(data.get(position).getAuthor());
-                        pictureBean1.setWidth(data.get(position).getWidth());
-                        pictureBean1.setHeight(data.get(position).getHeight());
-                        pictureBean1.setUrl(data.get(position).getUrl());
-                        pictureBean1.setDownload_url(data.get(position).getDownload_url());
-                        pictureBean1.save();
-                        pictureBean.setCollection(true);
+                        PictureDatabase.getInstance().getPictureDao().insert(pictureBean);
                     }
+
+                    // 更新 viewModel 中的数据
                     ((MainActivity)context).getModel().setGalleryList(data);
-                    List<PictureBean> viewModel_data = ((MainActivity)context).getModel().getHomeList().getValue();
-                    assert viewModel_data != null;
-                    for (PictureBean p1:viewModel_data)
+
+                    List<PictureBean> dataFromModel = ((MainActivity)context).getModel().getHomeList().getValue();
+                    assert dataFromModel != null;
+                    for (PictureBean p1:dataFromModel)
                     {
                         for (PictureBean p2: data)
                         {
-                            if (p2.getPicture_id().equals(p1.getPicture_id()))
+                            if (p2.getId().equals(p1.getId()))
                             {
                                 p1.setCollection(p2.isCollection());
                             }
                         }
                     }
-                    ((MainActivity)context).getModel().setHomeList(viewModel_data);
+
+                    ((MainActivity)context).getModel().setHomeList(dataFromModel);
+
                     data.remove(pictureBean);
+
+                    notifyItemChanged(getAdapterPosition());
                 }
             });
         }
