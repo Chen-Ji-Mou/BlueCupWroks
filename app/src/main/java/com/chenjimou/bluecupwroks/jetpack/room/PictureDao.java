@@ -13,11 +13,11 @@ import androidx.room.Update;
 @Dao
 public interface PictureDao
 {
-    @Insert
+    @Insert(entity = PictureBean.class)
     void insert(PictureBean...data);
-    @Update
+    @Update(entity = PictureBean.class)
     void update(PictureBean...data);
-    @Delete
+    @Delete(entity = PictureBean.class)
     void delete(PictureBean...data);
     @Query("SELECT * FROM picturebean")
     List<PictureBean> findAll();

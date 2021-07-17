@@ -3,9 +3,6 @@ package com.chenjimou.bluecupwroks.ui.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,36 +10,29 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.collection.LruCache;
-import androidx.constraintlayout.widget.Constraints;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.CustomViewTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.chenjimou.bluecupwroks.Constants;
 import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.RecyclerViewItemBinding;
 import com.chenjimou.bluecupwroks.jetpack.room.PictureDatabase;
 import com.chenjimou.bluecupwroks.model.PictureBean;
-import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.ui.activity.PictureDetailsActivity;
 import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
+
 import java.util.List;
 
-public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
+public class PrivateCollectionAdapter extends RecyclerView.Adapter<PrivateCollectionAdapter.ViewHolder>
 {
     RecyclerViewItemBinding mBinding;
 
     final Context context;
     final List<PictureBean> data;
 
-    private static final String TAG = "HomeAdapter";
-
-    public HomeAdapter(Context context, List<PictureBean> data)
+    public PrivateCollectionAdapter(Context context, List<PictureBean> data)
     {
         this.context = context;
         this.data = data;
@@ -59,14 +49,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position)
     {
-        if (data.get(position).isCollection())
-        {
-            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-        }
-        else
-        {
-            holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-        }
+        holder.ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
 
         int screenWidth = DisplayUtils.getScreenWidth((Activity)context);
         int imageWidth = (screenWidth - DisplayUtils.dip2px(context, 24)) / 2;
@@ -134,29 +117,14 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder>
                 {
                     PictureBean pictureBean = data.get(getAdapterPosition());
 
-                    boolean isCollection = pictureBean.isCollection();
+                    ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
+                    PictureDatabase.getInstance().getPictureDao().delete(pictureBean);
 
-                    pictureBean.setCollection(!isCollection);
+                    data.remove(pictureBean);
 
-                    if (isCollection)
-                    {
-                        ibCollection.setBackgroundResource(R.drawable.ic_favorite_border_black_24dp);
-                        PictureDatabase.getInstance().getPictureDao().delete(pictureBean);
-                    }
-                    else
-                    {
-                        ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
-                        PictureDatabase.getInstance().getPictureDao().insert(pictureBean);
-                    }
+                    notifyDataSetChanged();
 
-                    // 更新 viewModel 中的数据
-                    ((MainActivity)context).getModel().setHomeList(data);
-
-                    List<PictureBean> dataFromDatabase = PictureDatabase.getInstance().getPictureDao().findAll();
-
-                    ((MainActivity)context).getModel().setGalleryList(dataFromDatabase);
-
-                    notifyItemChanged(getAdapterPosition());
+                    Constants.IS_DATABASE_CHANGE = true;
                 }
             });
         }

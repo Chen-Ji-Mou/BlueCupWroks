@@ -25,7 +25,6 @@ public abstract class PictureDatabase extends RoomDatabase
                     mInstance = Room.databaseBuilder(BaseApplication.sApplication,
                             PictureDatabase.class, "picture_database.db")
                             .allowMainThreadQueries() // 允许在主线程创建数据库
-                            .fallbackToDestructiveMigration() // 数据库更新时删除数据重新创建
                             .build();
                 }
             }

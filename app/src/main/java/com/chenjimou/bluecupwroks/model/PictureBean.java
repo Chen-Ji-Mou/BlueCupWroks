@@ -15,6 +15,7 @@ import androidx.room.PrimaryKey;
 public class PictureBean implements Parcelable
 {
     @PrimaryKey(autoGenerate = true)
+    @Expose(serialize = false, deserialize = false)
     public int database_id = 0;
     @ColumnInfo(name = "id")
     String id;
@@ -31,8 +32,10 @@ public class PictureBean implements Parcelable
     @Expose(serialize = false, deserialize = false)
     boolean isCollection;
     public PictureBean() { }
+
     protected PictureBean(Parcel in)
     {
+        database_id = in.readInt();
         id = in.readString();
         author = in.readString();
         width = in.readInt();
@@ -41,6 +44,7 @@ public class PictureBean implements Parcelable
         download_url = in.readString();
         isCollection = in.readByte() != 0;
     }
+
     public static final Creator<PictureBean> CREATOR = new Creator<PictureBean>()
     {
         @Override
@@ -55,6 +59,15 @@ public class PictureBean implements Parcelable
             return new PictureBean[size];
         }
     };
+
+    public int getDatabase_id()
+    {
+        return database_id;
+    }
+    public void setDatabase_id(int database_id)
+    {
+        this.database_id = database_id;
+    }
     public String getId()
     {
         return id;
@@ -111,20 +124,17 @@ public class PictureBean implements Parcelable
     {
         isCollection = collection;
     }
-    @Override
-    public String toString()
-    {
-        return "PictureBean{" + "id=" + id + ", author='" + author + '\'' + ", width=" + width + ", height=" + height + ", url='" + url +
-                '\'' + ", download_url='" + download_url + '\'' + ", isCollection=" + isCollection + '}';
-    }
+
     @Override
     public int describeContents()
     {
         return 0;
     }
+
     @Override
     public void writeToParcel(Parcel dest, int flags)
     {
+        dest.writeInt(database_id);
         dest.writeString(id);
         dest.writeString(author);
         dest.writeInt(width);
@@ -132,5 +142,13 @@ public class PictureBean implements Parcelable
         dest.writeString(url);
         dest.writeString(download_url);
         dest.writeByte((byte)(isCollection ? 1 : 0));
+    }
+
+    @Override
+    public String toString()
+    {
+        return "PictureBean{" + "database_id=" + database_id + ", id='" + id + '\'' + ", author='" + author + '\'' + ", width=" + width +
+                ", height=" + height + ", url='" + url + '\'' + ", download_url='" + download_url + '\'' + ", isCollection=" +
+                isCollection + '}';
     }
 }

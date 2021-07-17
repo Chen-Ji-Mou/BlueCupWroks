@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-public class MainItemDecoration extends RecyclerView.ItemDecoration
+public class CustomItemDecoration extends RecyclerView.ItemDecoration
 {
     @Override
     public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,

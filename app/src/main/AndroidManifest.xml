@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chenjimou.bluecupwroks">
-
+    
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
-
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    
     <application
         android:name=".base.BaseApplication"
         android:allowBackup="true"
@@ -15,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/MaterialAppTheme">
         <activity
+            android:name=".ui.activity.PrivateCollectionActivity"
+            android:theme="@style/ImmersiveTheme"/>
+        <activity
             android:name=".ui.activity.PictureDetailsActivity"
             android:theme="@style/ImmersiveTheme" />
         <activity
@@ -23,7 +28,7 @@
             android:theme="@style/ImmersiveTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+    
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

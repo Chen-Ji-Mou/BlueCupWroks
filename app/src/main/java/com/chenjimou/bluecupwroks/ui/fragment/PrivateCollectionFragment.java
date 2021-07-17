@@ -15,19 +15,14 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.FragmentGalleryBinding;
 import com.chenjimou.bluecupwroks.jetpack.room.PictureDatabase;
-import com.chenjimou.bluecupwroks.jetpack.viewmodel.MainActivityViewModel;
 import com.chenjimou.bluecupwroks.model.PictureBean;
-import com.chenjimou.bluecupwroks.inter.RetrofitRequest;
-import com.chenjimou.bluecupwroks.ui.adapter.GalleryAdapter;
-import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
-import com.chenjimou.bluecupwroks.widget.MainItemDecoration;
-import com.google.gson.Gson;
+import com.chenjimou.bluecupwroks.ui.adapter.PrivateCollectionAdapter;
+import com.chenjimou.bluecupwroks.widget.CustomItemDecoration;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -36,24 +31,22 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-public class GalleryFragment extends Fragment
+public class PrivateCollectionFragment extends Fragment
 {
     FragmentGalleryBinding mBinding;
 
     final List<PictureBean> dataOnUI = new ArrayList<>();
 
-    MainActivityViewModel mViewModel;
-    GalleryAdapter mAdapter;
+    PrivateCollectionAdapter mAdapter;
     ProgressDialog mDialog;
 
     Disposable disposable;
 
-    private static final String TAG = "GalleryFragment";
+    boolean alreadyLoad = false;
+    boolean isError = false;
+
+    private static final String TAG = "PrivateCollectionFragment";
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -65,19 +58,13 @@ public class GalleryFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
     {
         init();
-        if (!loadFromModel())
-        {
-            loadFromDatabase();
-        }
     }
 
     void init()
     {
-        mViewModel = ((MainActivity) getContext()).getModel();
-
         mBinding.rvGallery.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-        mBinding.rvGallery.addItemDecoration(new MainItemDecoration());
-        mAdapter = new GalleryAdapter(getActivity(), dataOnUI);
+        mBinding.rvGallery.addItemDecoration(new CustomItemDecoration());
+        mAdapter = new PrivateCollectionAdapter(getActivity(), dataOnUI);
         mBinding.rvGallery.setAdapter(mAdapter);
 
         mDialog = new ProgressDialog(getContext());
@@ -86,34 +73,12 @@ public class GalleryFragment extends Fragment
         mDialog.setCanceledOnTouchOutside(false);
     }
 
-    boolean loadFromModel()
+    @Override
+    public void onStart()
     {
-        boolean result;
-        List<PictureBean> dataFromModel = mViewModel.getGalleryList().getValue();
-        if (dataFromModel != null && dataFromModel.size() > 0)
-        {
-            dataOnUI.addAll(dataFromModel);
-
-            if(dataOnUI.size() > 0)
-            {
-                mBinding.rvGallery.setVisibility(View.VISIBLE);
-                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
-            }
-            else
-            {
-                mBinding.rvGallery.setVisibility(View.GONE);
-                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
-            }
-
-            mAdapter.notifyDataSetChanged();
-
-            result = true;
-        }
-        else
-        {
-            result = false;
-        }
-        return result;
+        super.onStart();
+        if (!alreadyLoad)
+            loadFromDatabase();
     }
 
     void loadFromDatabase()
@@ -123,10 +88,20 @@ public class GalleryFragment extends Fragment
             @Override
             public void subscribe(@NotNull ObservableEmitter<List<PictureBean>> emitter) throws Exception
             {
-                List<PictureBean> dataFromDatabase = PictureDatabase.getInstance().getPictureDao().findAll();
-                dataOnUI.addAll(dataFromDatabase);
-                emitter.onNext(dataOnUI);
-                emitter.onComplete();
+                try
+                {
+                    List<PictureBean> dataFromDatabase = PictureDatabase.getInstance().getPictureDao().findAll();
+                    emitter.onNext(dataFromDatabase);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    emitter.onError(e);
+                }
+                finally
+                {
+                    emitter.onComplete();
+                }
             }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -143,12 +118,14 @@ public class GalleryFragment extends Fragment
                     public void onNext(@NotNull List<PictureBean> dataFromDatabase)
                     {
                         dataOnUI.addAll(dataFromDatabase);
+                        isError = false;
                     }
 
                     @Override
                     public void onError(@NotNull Throwable e)
                     {
                         mDialog.dismiss();
+                        isError = true;
                         Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
@@ -157,20 +134,23 @@ public class GalleryFragment extends Fragment
                     {
                         mDialog.dismiss();
 
-                        if(dataOnUI.size() > 0)
+                        if (!isError)
                         {
-                            mBinding.rvGallery.setVisibility(View.VISIBLE);
-                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
-                        }
-                        else
-                        {
-                            mBinding.rvGallery.setVisibility(View.GONE);
-                            mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
-                        }
+                            if(!dataOnUI.isEmpty())
+                            {
+                                mBinding.rvGallery.setVisibility(View.VISIBLE);
+                                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.GONE);
+                            }
+                            else
+                            {
+                                mBinding.rvGallery.setVisibility(View.GONE);
+                                mBinding.getRoot().findViewById(R.id.layout_no_data).setVisibility(View.VISIBLE);
+                            }
 
-                        mAdapter.notifyDataSetChanged();
+                            mAdapter.notifyDataSetChanged();
 
-                        mViewModel.setGalleryList(dataOnUI);
+                            alreadyLoad = true;
+                        }
                     }
                 });
     }

@@ -1,10 +1,8 @@
 package com.chenjimou.bluecupwroks.ui.adapter;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +10,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -22,21 +19,21 @@ import com.chenjimou.bluecupwroks.R;
 import com.chenjimou.bluecupwroks.databinding.RecyclerViewItemBinding;
 import com.chenjimou.bluecupwroks.jetpack.room.PictureDatabase;
 import com.chenjimou.bluecupwroks.model.PictureBean;
-import com.chenjimou.bluecupwroks.ui.activity.MainActivity;
 import com.chenjimou.bluecupwroks.ui.activity.PictureDetailsActivity;
 import com.chenjimou.bluecupwroks.utils.DisplayUtils;
 
-
 import java.util.List;
 
-public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHolder>
+public class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder>
 {
     RecyclerViewItemBinding mBinding;
 
     final Context context;
     final List<PictureBean> data;
 
-    public GalleryAdapter(Context context, List<PictureBean> data)
+    private static final String TAG = "MainAdapter";
+
+    public MainAdapter(Context context, List<PictureBean> data)
     {
         this.context = context;
         this.data = data;
@@ -142,26 +139,6 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
                         ibCollection.setBackgroundResource(R.drawable.ic_favorite_black_24dp);
                         PictureDatabase.getInstance().getPictureDao().insert(pictureBean);
                     }
-
-                    // 更新 viewModel 中的数据
-                    ((MainActivity)context).getModel().setGalleryList(data);
-
-                    List<PictureBean> dataFromModel = ((MainActivity)context).getModel().getHomeList().getValue();
-                    assert dataFromModel != null;
-                    for (PictureBean p1:dataFromModel)
-                    {
-                        for (PictureBean p2: data)
-                        {
-                            if (p2.getId().equals(p1.getId()))
-                            {
-                                p1.setCollection(p2.isCollection());
-                            }
-                        }
-                    }
-
-                    ((MainActivity)context).getModel().setHomeList(dataFromModel);
-
-                    data.remove(pictureBean);
 
                     notifyItemChanged(getAdapterPosition());
                 }
